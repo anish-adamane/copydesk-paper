@@ -1,1 +1,19 @@
-"use server";import{redirect as o}from"next/navigation";import{clearSession as n,loginWithPassword as s}from"@/lib/auth/session";async function g(r){const i=String(r.get("email")??""),t=String(r.get("password")??"");await s(i,t)||o("/login?error=1"),o("/desk")}async function l(){await n(),o("/login")}export{g as loginAction,l as logoutAction};
+"use server";
+
+import { redirect } from "next/navigation";
+import { clearSession, loginWithPassword } from "@/lib/auth/session";
+
+export async function loginAction(formData: FormData) {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const user = await loginWithPassword(email, password);
+  if (!user) {
+    redirect("/login?error=1");
+  }
+  redirect("/desk");
+}
+
+export async function logoutAction() {
+  await clearSession();
+  redirect("/login");
+}

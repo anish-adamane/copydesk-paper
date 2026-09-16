@@ -1,1 +1,5 @@
-import{NextResponse as o}from"next/server";async function r(){return o.json({ok:!0,product:"copydesk"})}export{r as GET};
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  return NextResponse.json({ ok: true, product: "copydesk" });
+}

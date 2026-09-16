@@ -1,1 +1,32 @@
-import{IBM_Plex_Mono as t,Newsreader as a}from"next/font/google";import"./globals.css";const o=a({variable:"--font-newsreader",subsets:["latin"],style:["normal","italic"]}),r=t({variable:"--font-ibm-mono",subsets:["latin"],weight:["400","500","600"]}),s={title:"Copy desk \u2014 Senior Backend Engineer, Billing",description:"Paper hiring desk: one req, inbound pile, keep or kill, draft, Approve before Gmail or Ashby."};function n({children:e}){return React.createElement("html",{lang:"en",className:`${o.variable} ${r.variable} h-full`},React.createElement("body",{className:"min-h-full"},e))}export{n as default,s as metadata};
+import type { Metadata } from "next";
+import { IBM_Plex_Mono, Newsreader } from "next/font/google";
+import "./globals.css";
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
+const ibmMono = IBM_Plex_Mono({
+  variable: "--font-ibm-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+export const metadata: Metadata = {
+  title: "Copy desk — Senior Backend Engineer, Billing",
+  description:
+    "Paper hiring desk: one req, inbound pile, keep or kill, draft, Approve before Gmail or Ashby.",
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html
+      lang="en"
+      className={`${newsreader.variable} ${ibmMono.variable} h-full`}
+    >
+      <body className="min-h-full">{children}</body>
+    </html>
+  );
+}
