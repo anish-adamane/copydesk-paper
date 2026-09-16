@@ -23,7 +23,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${newsreader.variable} ${ibmMono.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${newsreader.variable} ${ibmMono.variable} h-full`}
+    >
       <body className="min-h-full">{children}</body>
     </html>
   );
