@@ -1,15 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-import Database from "better-sqlite3";
-import { drizzle as drizzleBetter, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { drizzle as drizzleSqlJs, type SQLJsDatabase } from "drizzle-orm/sql-js";
-import type { Database as SqlJsDatabase } from "sql.js";
 import * as schema from "@/lib/db/schema";
 
-export type DeskDatabase =
-  | BetterSQLite3Database<typeof schema>
-  | SQLJsDatabase<typeof schema>;
+export type DeskDatabase = any;
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS users (
@@ -101,7 +95,11 @@ export function useSqlJs() {
   return Boolean(process.env.VERCEL) || process.env.DESK_DB === "sqljs";
 }
 
+const nodeRequire = createRequire(import.meta.url);
+
 function createBetterSqlite(filePath = sqlitePath()) {
+  const Database = nodeRequire("better-sqlite3");
+  const { drizzle } = nodeRequire("drizzle-orm/better-sqlite3");
   if (filePath !== ":memory:") {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
   }
@@ -109,21 +107,22 @@ function createBetterSqlite(filePath = sqlitePath()) {
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
   sqlite.exec(SCHEMA_SQL);
-  return drizzleBetter(sqlite, { schema });
+  return drizzle(sqlite, { schema });
 }
 
 const globalForDb = globalThis as unknown as {
   deskDb?: DeskDatabase;
   deskDbPath?: string;
-  sqlJsRaw?: SqlJsDatabase;
+  sqlJsRaw?: any;
 };
 
 async function createSqlJs(filePath = sqlitePath()) {
   const initSqlJs = (await import("sql.js")).default;
-  const require = createRequire(import.meta.url);
-  const wasmPath = require.resolve("sql.js/dist/sql-wasm.wasm");
-  const SQL = await initSqlJs({ wasmBinary: fs.readFileSync(wasmPath) });
-  let sqlite: SqlJsDatabase;
+  const { drizzle } = await import("drizzle-orm/sql-js");
+  const SQL = await initSqlJs({
+    locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
+  });
+  let sqlite: any;
   if (filePath !== ":memory:" && fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
     sqlite = new SQL.Database(fs.readFileSync(filePath));
   } else {
@@ -132,7 +131,7 @@ async function createSqlJs(filePath = sqlitePath()) {
   }
   sqlite.exec(SCHEMA_SQL);
   globalForDb.sqlJsRaw = sqlite;
-  return drizzleSqlJs(sqlite, { schema });
+  return drizzle(sqlite, { schema });
 }
 
 export function persistDb() {
