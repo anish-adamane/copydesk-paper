@@ -1,18 +1,1 @@
-import { redirect } from "next/navigation";
-import { DeskShell } from "@/components/desk/desk-shell";
-import { readSession } from "@/lib/auth/session";
-import { loadDesk } from "@/lib/desk/queries";
-
-export const dynamic = "force-dynamic";
-
-export default async function DeskPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ req?: string; file?: string }>;
-}) {
-  const user = await readSession();
-  if (!user) redirect("/login");
-  const params = await searchParams;
-  const snapshot = await loadDesk(user, params.req);
-  return <DeskShell key={`${snapshot.req.id}:${params.file ?? ""}`} snapshot={snapshot} initialSelectedId={params.file ?? null} />;
-}
+import{redirect as o}from"next/navigation";import{DeskShell as a}from"@/components/desk/desk-shell";import{readSession as s}from"@/lib/auth/session";import{loadDesk as n}from"@/lib/desk/queries";const p="force-dynamic";async function m({searchParams:t}){const r=await s();r||o("/login");const e=await t,i=await n(r,e.req);return React.createElement(a,{key:`${i.req.id}:${e.file??""}`,snapshot:i,initialSelectedId:e.file??null})}export{m as default,p as dynamic};
