@@ -1,4 +1,17 @@
-import t from"node:fs";import E from"node:path";import{createRequire as c}from"node:module";import O from"better-sqlite3";import{drizzle as X}from"drizzle-orm/better-sqlite3";import{drizzle as u}from"drizzle-orm/sql-js";import*as n from"@/lib/db/schema";const o=`
+import fs from "node:fs";
+import path from "node:path";
+import { createRequire } from "node:module";
+import Database from "better-sqlite3";
+import { drizzle as drizzleBetter, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { drizzle as drizzleSqlJs, type SQLJsDatabase } from "drizzle-orm/sql-js";
+import type { Database as SqlJsDatabase } from "sql.js";
+import * as schema from "@/lib/db/schema";
+
+export type DeskDatabase =
+  | BetterSQLite3Database<typeof schema>
+  | SQLJsDatabase<typeof schema>;
+
+const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
@@ -76,4 +89,84 @@ CREATE TABLE IF NOT EXISTS run_logs (
   failure TEXT,
   created_at INTEGER NOT NULL
 );
-`;function r(){return process.env.SQLITE_PATH?process.env.SQLITE_PATH:process.env.VERCEL?"/tmp/copydesk.db":E.join(process.cwd(),"data","desk.db")}function i(){return!!process.env.VERCEL||process.env.DESK_DB==="sqljs"}function L(e=r()){e!==":memory:"&&t.mkdirSync(E.dirname(e),{recursive:!0});const s=new O(e);return s.pragma("journal_mode = WAL"),s.pragma("foreign_keys = ON"),s.exec(o),X(s,{schema:n})}const T=globalThis;async function m(e=r()){const s=(await import("sql.js")).default,d=c(import.meta.url).resolve("sql.js/dist/sql-wasm.wasm"),N=await s({wasmBinary:t.readFileSync(d)});let a;return e!==":memory:"&&t.existsSync(e)&&t.statSync(e).size>0?a=new N.Database(t.readFileSync(e)):(e!==":memory:"&&t.mkdirSync(E.dirname(e),{recursive:!0}),a=new N.Database),a.exec(o),T.sqlJsRaw=a,u(a,{schema:n})}function b(){const e=r();!i()||!T.sqlJsRaw||e===":memory:"||t.writeFileSync(e,Buffer.from(T.sqlJsRaw.export()))}async function D(){const e=r();return T.deskDb&&T.deskDbPath===e||(T.deskDb=i()?await m(e):L(e),T.deskDbPath=e),T.deskDb}function f(){const e=r();if(!T.deskDb||T.deskDbPath!==e){if(i())throw new Error("Database not initialized. Call initDb() / ensureSeeded() first.");T.deskDb=L(e),T.deskDbPath=e}return T.deskDb}function A(){T.deskDb=void 0,T.deskDbPath=void 0,T.sqlJsRaw=void 0}export{f as getDb,D as initDb,b as persistDb,A as resetDbSingleton,r as sqlitePath,i as useSqlJs};
+`;
+
+export function sqlitePath() {
+  if (process.env.SQLITE_PATH) return process.env.SQLITE_PATH;
+  if (process.env.VERCEL) return "/tmp/copydesk.db";
+  return path.join(process.cwd(), "data", "desk.db");
+}
+
+export function useSqlJs() {
+  return Boolean(process.env.VERCEL) || process.env.DESK_DB === "sqljs";
+}
+
+function createBetterSqlite(filePath = sqlitePath()) {
+  if (filePath !== ":memory:") {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  }
+  const sqlite = new Database(filePath);
+  sqlite.pragma("journal_mode = WAL");
+  sqlite.pragma("foreign_keys = ON");
+  sqlite.exec(SCHEMA_SQL);
+  return drizzleBetter(sqlite, { schema });
+}
+
+const globalForDb = globalThis as unknown as {
+  deskDb?: DeskDatabase;
+  deskDbPath?: string;
+  sqlJsRaw?: SqlJsDatabase;
+};
+
+async function createSqlJs(filePath = sqlitePath()) {
+  const initSqlJs = (await import("sql.js")).default;
+  const require = createRequire(import.meta.url);
+  const wasmPath = require.resolve("sql.js/dist/sql-wasm.wasm");
+  const SQL = await initSqlJs({ wasmBinary: fs.readFileSync(wasmPath) });
+  let sqlite: SqlJsDatabase;
+  if (filePath !== ":memory:" && fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
+    sqlite = new SQL.Database(fs.readFileSync(filePath));
+  } else {
+    if (filePath !== ":memory:") fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    sqlite = new SQL.Database();
+  }
+  sqlite.exec(SCHEMA_SQL);
+  globalForDb.sqlJsRaw = sqlite;
+  return drizzleSqlJs(sqlite, { schema });
+}
+
+export function persistDb() {
+  const filePath = sqlitePath();
+  if (!useSqlJs() || !globalForDb.sqlJsRaw || filePath === ":memory:") return;
+  fs.writeFileSync(filePath, Buffer.from(globalForDb.sqlJsRaw.export()));
+}
+
+export async function initDb() {
+  const filePath = sqlitePath();
+  if (globalForDb.deskDb && globalForDb.deskDbPath === filePath) {
+    return globalForDb.deskDb;
+  }
+  globalForDb.deskDb = useSqlJs()
+    ? await createSqlJs(filePath)
+    : createBetterSqlite(filePath);
+  globalForDb.deskDbPath = filePath;
+  return globalForDb.deskDb;
+}
+
+export function getDb() {
+  const filePath = sqlitePath();
+  if (!globalForDb.deskDb || globalForDb.deskDbPath !== filePath) {
+    if (useSqlJs()) {
+      throw new Error("Database not initialized. Call initDb() / ensureSeeded() first.");
+    }
+    globalForDb.deskDb = createBetterSqlite(filePath);
+    globalForDb.deskDbPath = filePath;
+  }
+  return globalForDb.deskDb;
+}
+
+export function resetDbSingleton() {
+  globalForDb.deskDb = undefined;
+  globalForDb.deskDbPath = undefined;
+  globalForDb.sqlJsRaw = undefined;
+}
