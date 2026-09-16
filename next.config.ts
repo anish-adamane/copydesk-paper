@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "localhost", "*.trycloudflare.com"],
   experimental: {
     serverActions: {
-      allowedOrigins: ["wells-acid-nevada-floyd.trycloudflare.com"],
+      allowedOrigins: ["*.vercel.app"],
     },
   },
 };
