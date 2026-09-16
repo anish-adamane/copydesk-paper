@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { IBM_Plex_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 
@@ -20,12 +21,9 @@ export const metadata: Metadata = {
     "Paper hiring desk: one req, inbound pile, keep or kill, draft, Approve before Gmail or Ashby.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${newsreader.variable} ${ibmMono.variable} h-full`}
-    >
+    <html lang="en" className={`${newsreader.variable} ${ibmMono.variable} h-full`}>
       <body className="min-h-full">{children}</body>
     </html>
   );
