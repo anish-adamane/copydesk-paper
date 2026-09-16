@@ -1,0 +1,1 @@
+import{createLivePipes as e}from"@/lib/composio/live";import{createMockPipes as o}from"@/lib/composio/mock";function i(){return process.env.COMPOSIO_API_KEY?"live":"mock"}function t(){return i()==="live"?e():o()}export{i as composioMode,t as getDeskPipes};

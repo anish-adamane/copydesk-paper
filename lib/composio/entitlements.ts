@@ -1,0 +1,1 @@
+import{COMPOSIO_CATALOG as t}from"@/lib/composio/catalog";const p=t.map(o=>o.id),a={source:{toolkit:"ashby",purpose:"Inbound applications for the open req"},gmail:{toolkit:"gmail",purpose:"Send approved outreach"},ats:{toolkit:"ashby",purpose:"Optional stage write after the same approve"}};export{p as COMPOSIO_CATALOG_ENTITLEMENTS,a as DESK_PIPES};
