@@ -1,1 +1,66 @@
-function o({req:e,compact:i=!1}){const s=e.briefStatus==="thin";return i&&!s?React.createElement("section",{className:"grid gap-3 md:grid-cols-3"},React.createElement(t,{label:"Must-haves",items:e.mustHaves,testId:"must-haves"}),React.createElement(t,{label:"Nice-to-haves",items:e.niceToHaves}),React.createElement(t,{label:"Out of scope",items:e.outOfScope})):React.createElement("section",null,s?React.createElement("p",{"data-testid":"thin-brief",className:"border border-dashed border-[var(--ink)] bg-[var(--sheet)] px-3 py-4 font-serif text-sm"},"Thin brief. No must-haves, nice-to-haves, or out-of-scope on file. The pile cannot be scored until you fill in this brief."):React.createElement("div",{className:"grid gap-3 md:grid-cols-3"},React.createElement(t,{label:"Must-haves",items:e.mustHaves,testId:"must-haves"}),React.createElement(t,{label:"Nice-to-haves",items:e.niceToHaves}),React.createElement(t,{label:"Out of scope",items:e.outOfScope})))}function t({label:e,items:i,testId:s}){return React.createElement("div",{"data-testid":s},React.createElement("p",{className:"mb-1 font-mono text-[10px] font-semibold tracking-[0.06em] text-[var(--ink-mute)] uppercase"},e),React.createElement("ul",{className:"space-y-1 font-serif text-[13px] leading-snug"},i.map(a=>React.createElement("li",{key:a,className:"border-t border-[var(--rule)] pt-1 first:border-t-0 first:pt-0"},a))))}export{o as BuyerCard};
+import type { DeskReq } from "@/lib/desk/types";
+
+export function BuyerCard({
+  req,
+  compact = false,
+}: {
+  req: DeskReq;
+  compact?: boolean;
+}) {
+  const thin = req.briefStatus === "thin";
+
+  if (compact && !thin) {
+    return (
+      <section className="grid gap-3 md:grid-cols-3">
+        <BriefColumn label="Must-haves" items={req.mustHaves} testId="must-haves" />
+        <BriefColumn label="Nice-to-haves" items={req.niceToHaves} />
+        <BriefColumn label="Out of scope" items={req.outOfScope} />
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      {thin ? (
+        <p
+          data-testid="thin-brief"
+          className="border border-dashed border-[var(--ink)] bg-[var(--sheet)] px-3 py-4 font-serif text-sm"
+        >
+          Thin brief. No must-haves, nice-to-haves, or out-of-scope on file. The
+          pile cannot be scored until you fill in this brief.
+        </p>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-3">
+          <BriefColumn label="Must-haves" items={req.mustHaves} testId="must-haves" />
+          <BriefColumn label="Nice-to-haves" items={req.niceToHaves} />
+          <BriefColumn label="Out of scope" items={req.outOfScope} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function BriefColumn({
+  label,
+  items,
+  testId,
+}: {
+  label: string;
+  items: string[];
+  testId?: string;
+}) {
+  return (
+    <div data-testid={testId}>
+      <p className="mb-1 font-mono text-[10px] font-semibold tracking-[0.06em] text-[var(--ink-mute)] uppercase">
+        {label}
+      </p>
+      <ul className="space-y-1 font-serif text-[13px] leading-snug">
+        {items.map((item) => (
+          <li key={item} className="border-t border-[var(--rule)] pt-1 first:border-t-0 first:pt-0">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
